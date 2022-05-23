@@ -29,14 +29,12 @@ const App: Component = () => {
   function onSubmit(event: SubmitEvent) {
     event.preventDefault();
 
-    const data: { content?: string; type?: string } = Object.fromEntries(
-      new FormData(form)
-    );
+    const data: { type?: string } = Object.fromEntries(new FormData(form));
 
-    data.content = JSON.stringify(editor().getJSON());
+    const content = editor().getJSON();
 
-    if (data.content && data.content?.trim() !== "") {
-      addBullet(data).then(() => {
+    if (!editor().isEmpty) {
+      addBullet({ content, type: data.type }).then(() => {
         editor().commands.focus();
         editor().commands.setContent("");
       });

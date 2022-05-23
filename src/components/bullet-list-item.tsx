@@ -29,16 +29,12 @@ export const BulletListItem: Component<Props> = (props) => {
 
   const content = createMemo(() => {
     if (!bullet()) return null;
-    try {
-      return generateHtml(JSON.parse(bullet().content));
-    } catch {
-      return bullet().content;
-    }
+    return generateHtml(bullet().content);
   });
 
   createEffect(() => {
     const item = bulletCollection.find((item) => item.id === props.id);
-    setBullet(item);
+    setBullet(item as Bullet);
   });
 
   createEffect(() => {
@@ -102,12 +98,16 @@ export const BulletListItem: Component<Props> = (props) => {
             <div>
               <TextEditor
                 editorRef={setEditor}
-                initialContent={JSON.parse(bullet().content)}
+                initialContent={bullet().content}
                 onSubmit={(editor) => {
                   stopEditing();
-                  void updateBullet(props.id, {
-                    content: JSON.stringify(editor.getJSON()),
-                  });
+                  if (editor.isEmpty) {
+                    void deleteBullet(props.id);
+                  } else {
+                    void updateBullet(props.id, {
+                      content: editor.getJSON(),
+                    });
+                  }
                 }}
                 onCancel={() => {
                   stopEditing();

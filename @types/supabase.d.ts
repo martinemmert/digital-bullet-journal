@@ -137,7 +137,7 @@ export interface definitions {
     updated_at?: string;
     /** Format: uuid */
     user?: string;
-    /** Format: text */
+    /** Format: json */
     content?: string;
     /** Format: character varying */
     type?: string;
@@ -187,7 +187,7 @@ export interface parameters {
   "rowFilter.bullets.updated_at": string;
   /** Format: uuid */
   "rowFilter.bullets.user": string;
-  /** Format: text */
+  /** Format: json */
   "rowFilter.bullets.content": string;
   /** Format: character varying */
   "rowFilter.bullets.type": string;

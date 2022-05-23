@@ -3,8 +3,11 @@ import { supabase } from "../lib/supabase-client";
 import { definitions } from "../../@types/supabase";
 import { createSignal } from "solid-js";
 import { PostgrestError } from "@supabase/supabase-js";
+import { JSONContent } from "@tiptap/core";
 
-export type Bullet = definitions["bullets"];
+export type Bullet = Omit<definitions["bullets"], "content"> & {
+  content: JSONContent;
+};
 
 const [bulletCollection, setBulletCollection] = createStore<Bullet[]>([]);
 
@@ -51,7 +54,7 @@ function createAddBulletMutation() {
 function createUpdateBulletMutation() {
   const [loading, setLoading] = createSignal(false);
 
-  function mutate(id: string, data: Pick<Bullet, "content" | "type">) {
+  function mutate(id: string, data: Partial<Pick<Bullet, "content" | "type">>) {
     setLoading(true);
     return fromBullets()
       .update({ ...data })
