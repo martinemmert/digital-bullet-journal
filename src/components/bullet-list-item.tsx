@@ -1,6 +1,7 @@
 import {
   Component,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
   Show,
@@ -12,51 +13,48 @@ import {
   createDeleteBulletMutation,
   createUpdateBulletMutation,
 } from "../store/bullet-collection";
+import { generateHtml, TextEditor } from "./text-editor";
+import { Editor } from "@tiptap/core";
 
 type Props = {
   id: string;
 };
 
 export const BulletListItem: Component<Props> = (props) => {
-  let textarea;
-
+  const [editor, setEditor] = createSignal<Editor>();
   const [bullet, setBullet] = createSignal<Bullet>();
-  const [inputValue, setInputValue] = createSignal("");
   const [editing, setEditing] = createSignal(false);
   const [updating, updateBullet] = createUpdateBulletMutation();
   const [deleting, deleteBullet] = createDeleteBulletMutation();
 
+  const content = createMemo(() => {
+    if (!bullet()) return null;
+    try {
+      return generateHtml(JSON.parse(bullet().content));
+    } catch {
+      return bullet().content;
+    }
+  });
+
   createEffect(() => {
     const item = bulletCollection.find((item) => item.id === props.id);
     setBullet(item);
-    setInputValue(item.content);
+  });
+
+  createEffect(() => {
+    editor()?.commands.focus();
+    editor()?.on("blur", () => {
+      editor()?.off("blur");
+      stopEditing();
+    });
   });
 
   function startEditing() {
     setEditing(true);
-    textarea.focus();
   }
 
   function stopEditing() {
     setEditing(false);
-  }
-
-  function onKeyDown(event: KeyboardEvent) {
-    if (event.key === "Enter" && event.altKey) {
-      stopEditing();
-      void updateBullet(props.id, { content: inputValue() });
-    }
-
-    if (event.key === "Escape") {
-      setInputValue(bullet().content);
-      setEditing(false);
-    }
-  }
-
-  function closeOnClickOutSide(el, callback) {
-    const onClick = (event) => !el.contains(event.target) && callback()?.();
-    document.body.addEventListener("click", onClick);
-    onCleanup(() => document.body.removeEventListener("click", onClick));
   }
 
   return (
@@ -91,22 +89,31 @@ export const BulletListItem: Component<Props> = (props) => {
             Delete
           </button>
         </header>
-        <div class="pb-2 ml-10 text-primary-content opacity-75 whitespace-pre-line">
+        <div class="pb-2 ml-10">
           <Show when={editing() === false}>
-            <p onClick={startEditing}>{bullet().content}</p>
+            <p
+              onClick={startEditing}
+              innerHTML={content()}
+              class="textarea text-sm prose"
+            />
           </Show>
           <Show when={editing()}>
-            <textarea
-              ref={textarea}
-              name="content"
-              class="textarea bg-base-300 w-full"
-              placeholder="type something"
-              value={inputValue()}
-              onKeyDown={onKeyDown}
-              onInput={(event) => setInputValue(event.currentTarget.value)}
-              // @ts-ignore
-              use:closeOnClickOutSide={() => stopEditing()}
-            />
+            {/*@ts-ignore */}
+            <div>
+              <TextEditor
+                editorRef={setEditor}
+                initialContent={JSON.parse(bullet().content)}
+                onSubmit={(editor) => {
+                  stopEditing();
+                  void updateBullet(props.id, {
+                    content: JSON.stringify(editor.getJSON()),
+                  });
+                }}
+                onCancel={() => {
+                  stopEditing();
+                }}
+              />
+            </div>
           </Show>
         </div>
       </li>

@@ -1,39 +1,45 @@
 import type { Component } from "solid-js";
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 import {
   bulletCollection,
   createAddBulletMutation,
   createLoadBulletCollectionQuery,
 } from "./store/bullet-collection";
 import { BulletListItem } from "./components/bullet-list-item";
+import { TextEditor } from "./components/text-editor";
+import { Editor } from "@tiptap/core";
 
 const App: Component = () => {
   let form;
   let textarea;
+  const [editor, setEditor] = createSignal<Editor>();
 
-  const [inputValue, setInputValue] = createSignal("");
   const [typeValue, setTypeValue] = createSignal("note");
   const [, , loadBulletCollection] = createLoadBulletCollectionQuery();
   const [isSaving, addBullet] = createAddBulletMutation();
 
-  onMount(() => loadBulletCollection());
+  onMount(() => {
+    loadBulletCollection();
+  });
+
+  createEffect(() => {
+    console.log("Editor", editor());
+  });
 
   function onSubmit(event: SubmitEvent) {
     event.preventDefault();
+
     const data: { content?: string; type?: string } = Object.fromEntries(
       new FormData(form)
     );
+
+    data.content = JSON.stringify(editor().getJSON());
+
     if (data.content && data.content?.trim() !== "") {
       addBullet(data).then(() => {
-        textarea.focus();
-        setInputValue("");
+        editor().commands.focus();
+        editor().commands.setContent("");
       });
-    }
-  }
-
-  function onKeyDown(event: KeyboardEvent) {
-    if (event.key === "Enter" && event.altKey) {
-      form.dispatchEvent(new SubmitEvent("submit"));
     }
   }
 
@@ -42,18 +48,12 @@ const App: Component = () => {
       <div class="card card-compact bg-base-200">
         <div class="card-body">
           <form ref={form} class="flex flex-col space-y-4" onSubmit={onSubmit}>
-            <div>
-              <textarea
-                ref={textarea}
-                name="content"
-                class="textarea bg-base-300 w-full"
-                placeholder="type something"
-                value={inputValue()}
-                onKeyDown={onKeyDown}
-                disabled={isSaving()}
-                onInput={(event) => setInputValue(event.currentTarget.value)}
-              />
-            </div>
+            <TextEditor
+              editorRef={setEditor}
+              onSubmit={(editor) =>
+                form.dispatchEvent(new SubmitEvent("submit"))
+              }
+            />
             <div class="flex flex-row space-x-4">
               <div>
                 <fieldset class="input-group">
