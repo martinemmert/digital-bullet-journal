@@ -1,111 +1,14 @@
 import type { Component } from "solid-js";
-import { createEffect, createSignal, For, onMount, Show } from "solid-js";
-import {
-  bulletCollection,
-  createAddBulletMutation,
-  createLoadBulletCollectionQuery,
-} from "./store/bullet-collection";
-import { BulletListItem } from "./components/bullet-list-item";
-import { TextEditor } from "./components/text-editor";
-import { Editor } from "@tiptap/core";
+import { Route, Routes } from "solid-app-router";
+import { AuthPage } from "./pages/auth-page";
+import { BulletsPage } from "./pages/bullets-page";
 
 const App: Component = () => {
-  let form;
-  let textarea;
-  const [editor, setEditor] = createSignal<Editor>();
-
-  const [typeValue, setTypeValue] = createSignal("note");
-  const [, , loadBulletCollection] = createLoadBulletCollectionQuery();
-  const [isSaving, addBullet] = createAddBulletMutation();
-
-  onMount(() => {
-    loadBulletCollection();
-  });
-
-  createEffect(() => {
-    console.log("Editor", editor());
-  });
-
-  function onSubmit(event: SubmitEvent) {
-    event.preventDefault();
-
-    const data: { type?: string } = Object.fromEntries(new FormData(form));
-
-    const content = editor().getJSON();
-
-    if (!editor().isEmpty) {
-      addBullet({ content, type: data.type }).then(() => {
-        editor().commands.focus();
-        editor().commands.setContent("");
-      });
-    }
-  }
-
   return (
-    <article class="container max-w-4xl mx-auto p-4">
-      <div class="card card-compact bg-base-200">
-        <div class="card-body">
-          <form ref={form} class="flex flex-col space-y-4" onSubmit={onSubmit}>
-            <TextEditor
-              editorRef={setEditor}
-              onSubmit={(editor) =>
-                form.dispatchEvent(new SubmitEvent("submit"))
-              }
-            />
-            <div class="flex flex-row space-x-4">
-              <div>
-                <fieldset class="input-group">
-                  <span>
-                    <label for="bullet_type">Type</label>
-                  </span>
-                  <select
-                    id="bullet_type"
-                    name="type"
-                    class="select"
-                    value={typeValue()}
-                    disabled={isSaving()}
-                    onChange={(event) =>
-                      setTypeValue(event.currentTarget.value)
-                    }
-                  >
-                    <option value="note">Note</option>
-                    <option value="todo">Todo</option>
-                    <option value="event">Event</option>
-                    <option value="idea">Idea</option>
-                  </select>
-                </fieldset>
-              </div>
-              <button
-                type="submit"
-                class="btn btn-primary no-animation flex-1 space-x-2"
-                classList={{ loading: isSaving() }}
-                disabled={isSaving()}
-              >
-                <Show when={isSaving()}>Saving</Show>
-                <Show when={!isSaving()}>
-                  <span>Add new {typeValue()}</span>
-                  <span class="space-x-1 hidden md:inline">
-                    (<kbd class="kbd kbd-xs">⌥</kbd>
-                    <span>+</span>
-                    <kbd class="kbd kbd-xs">Enter</kbd>)
-                  </span>
-                </Show>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <Show when={bulletCollection.length > 0}>
-        <div class="divider" />
-      </Show>
-
-      <ol class="relative border-l border-base-300 ml-4">
-        <For each={bulletCollection}>
-          {(bullet) => <BulletListItem id={bullet.id} />}
-        </For>
-      </ol>
-    </article>
+    <Routes>
+      <Route path="/" element={<BulletsPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+    </Routes>
   );
 };
 
