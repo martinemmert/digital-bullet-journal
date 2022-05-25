@@ -1,12 +1,17 @@
-import { Component, createEffect } from "solid-js";
+import { Component, createEffect, createReaction, onMount } from "solid-js";
 import { BulletList } from "../components/bullet-list";
 import { useNavigate } from "solid-app-router";
 import { logout, session, supabase } from "../lib/supabase-client";
-import { subscribeToBulletUpdates } from "../store/bullet-collection";
+import {
+  createLoadBulletCollectionQuery,
+  subscribeToBulletUpdates,
+} from "../store/bullet-collection";
 
 export const BulletsPage: Component = () => {
   let subscription;
   const navigate = useNavigate();
+  const [loading, error, loadBulletCollection] =
+    createLoadBulletCollectionQuery();
 
   createEffect(() => {
     if (session() && !subscription) {
@@ -19,6 +24,8 @@ export const BulletsPage: Component = () => {
       console.info("remove subscription to bullets");
     }
   });
+
+  createReaction(() => !loading() && loadBulletCollection())(session);
 
   createEffect(() => {
     if (!session()) navigate("/auth", { replace: true });

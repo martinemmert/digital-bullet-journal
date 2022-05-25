@@ -1,32 +1,18 @@
-import {
-  Component,
-  createEffect,
-  createSignal,
-  For,
-  onMount,
-  Show,
-} from "solid-js";
+import { Component, createSignal, For, Show } from "solid-js";
 import { TextEditor } from "./text-editor";
 import {
   bulletCollection,
   createAddBulletMutation,
-  createLoadBulletCollectionQuery,
 } from "../store/bullet-collection";
 import { BulletListItem } from "./bullet-list-item";
 import { Editor } from "@tiptap/core";
 
 export const BulletList: Component = () => {
   let form;
-  let textarea;
   const [editor, setEditor] = createSignal<Editor>();
 
   const [typeValue, setTypeValue] = createSignal("note");
-  const [, , loadBulletCollection] = createLoadBulletCollectionQuery();
   const [isSaving, addBullet] = createAddBulletMutation();
-
-  onMount(() => {
-    loadBulletCollection();
-  });
 
   function onSubmit(event: SubmitEvent) {
     event.preventDefault();
