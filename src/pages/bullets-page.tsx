@@ -1,10 +1,24 @@
 import { Component, createEffect } from "solid-js";
 import { BulletList } from "../components/bullet-list";
 import { useNavigate } from "solid-app-router";
-import { logout, session } from "../lib/supabase-client";
+import { logout, session, supabase } from "../lib/supabase-client";
+import { subscribeToBulletUpdates } from "../store/bullet-collection";
 
 export const BulletsPage: Component = () => {
+  let subscription;
   const navigate = useNavigate();
+
+  createEffect(() => {
+    if (session() && !subscription) {
+      console.info("subscribed to bullets");
+      subscription = subscribeToBulletUpdates.subscribe();
+      return;
+    }
+    if (!session() && subscription) {
+      void supabase.removeSubscription(subscription);
+      console.info("remove subscription to bullets");
+    }
+  });
 
   createEffect(() => {
     if (!session()) navigate("/auth", { replace: true });

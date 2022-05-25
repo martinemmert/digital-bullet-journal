@@ -28,10 +28,6 @@ export const BulletList: Component = () => {
     loadBulletCollection();
   });
 
-  createEffect(() => {
-    console.log("Editor", editor());
-  });
-
   function onSubmit(event: SubmitEvent) {
     event.preventDefault();
 

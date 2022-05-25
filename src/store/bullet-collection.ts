@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
-import { supabase } from "../lib/supabase-client";
+import { session, supabase } from "../lib/supabase-client";
 import { definitions } from "../../@types/supabase";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { PostgrestError } from "@supabase/supabase-js";
 import { JSONContent } from "@tiptap/core";
 
@@ -79,9 +79,12 @@ function createDeleteBulletMutation() {
   return [loading, mutate] as [typeof loading, typeof mutate];
 }
 
+let subscription;
+
 // subscribe to events and update the store
-fromBullets()
-  .on("*", ({ eventType, new: newItem, old: oldItem }) => {
+const subscribeToBulletUpdates = fromBullets().on(
+  "*",
+  ({ eventType, new: newItem, old: oldItem }) => {
     if (eventType === "INSERT") {
       setBulletCollection([newItem, ...bulletCollection]);
     }
@@ -104,8 +107,8 @@ fromBullets()
       newCollection.splice(index, 1);
       setBulletCollection(newCollection);
     }
-  })
-  .subscribe();
+  }
+);
 
 export {
   bulletCollection,
@@ -113,4 +116,5 @@ export {
   createAddBulletMutation,
   createUpdateBulletMutation,
   createDeleteBulletMutation,
+  subscribeToBulletUpdates,
 };
