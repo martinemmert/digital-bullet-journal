@@ -39,14 +39,21 @@ export const BulletListItem: Component<Props> = (props) => {
 
   createEffect(() => {
     editor()?.commands.focus();
-    editor()?.on("blur", () => {
-      editor()?.off("blur");
-      stopEditing();
-    });
   });
 
   function startEditing() {
     setEditing(true);
+  }
+
+  function submit() {
+    if (editor().isEmpty) {
+      void deleteBullet(props.id);
+    } else {
+      void updateBullet(props.id, {
+        content: editor().getJSON(),
+      });
+    }
+    stopEditing();
   }
 
   function stopEditing() {
@@ -95,7 +102,7 @@ export const BulletListItem: Component<Props> = (props) => {
           </Show>
           <Show when={editing()}>
             {/*@ts-ignore */}
-            <div>
+            <div class="bg-base-300 p-4 rounded-box -ml-4 flex flex-col space-y-4">
               <TextEditor
                 editorRef={setEditor}
                 initialContent={bullet().content}
@@ -113,6 +120,24 @@ export const BulletListItem: Component<Props> = (props) => {
                   stopEditing();
                 }}
               />
+              <div class="flex justify-end space-x-4">
+                <button
+                  class="btn btn-sm btn-outline"
+                  classList={{ loading: updating() }}
+                  disabled={updating()}
+                  onClick={stopEditing}
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  classList={{ loading: updating() }}
+                  disabled={updating()}
+                  onClick={submit}
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </Show>
         </div>
