@@ -15,7 +15,7 @@ export const BulletsPage: Component = () => {
       <div class="navbar bg-base-200">
         <div class={"navbar-start"}></div>
         <div class="navbar-end space-x-4">
-          <span>{session().user.email}</span>
+          <span>{session()?.user.email}</span>
           <button class="btn btn-ghost btn-circle" onClick={logout}>
             <svg
               class="w-6 h-6"
