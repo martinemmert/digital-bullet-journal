@@ -19,9 +19,10 @@ export interface paths {
           id?: parameters["rowFilter.bullets.id"];
           created_at?: parameters["rowFilter.bullets.created_at"];
           updated_at?: parameters["rowFilter.bullets.updated_at"];
-          user?: parameters["rowFilter.bullets.user"];
+          user_id?: parameters["rowFilter.bullets.user_id"];
           content?: parameters["rowFilter.bullets.content"];
           type?: parameters["rowFilter.bullets.type"];
+          tags?: parameters["rowFilter.bullets.tags"];
           /** Filtering Columns */
           select?: parameters["select"];
           /** Ordering */
@@ -75,9 +76,10 @@ export interface paths {
           id?: parameters["rowFilter.bullets.id"];
           created_at?: parameters["rowFilter.bullets.created_at"];
           updated_at?: parameters["rowFilter.bullets.updated_at"];
-          user?: parameters["rowFilter.bullets.user"];
+          user_id?: parameters["rowFilter.bullets.user_id"];
           content?: parameters["rowFilter.bullets.content"];
           type?: parameters["rowFilter.bullets.type"];
+          tags?: parameters["rowFilter.bullets.tags"];
         };
         header: {
           /** Preference */
@@ -95,9 +97,10 @@ export interface paths {
           id?: parameters["rowFilter.bullets.id"];
           created_at?: parameters["rowFilter.bullets.created_at"];
           updated_at?: parameters["rowFilter.bullets.updated_at"];
-          user?: parameters["rowFilter.bullets.user"];
+          user_id?: parameters["rowFilter.bullets.user_id"];
           content?: parameters["rowFilter.bullets.content"];
           type?: parameters["rowFilter.bullets.type"];
+          tags?: parameters["rowFilter.bullets.tags"];
         };
         body: {
           /** bullets */
@@ -135,12 +138,17 @@ export interface definitions {
      * @default now()
      */
     updated_at?: string;
-    /** Format: uuid */
-    user?: string;
+    /**
+     * Format: uuid
+     * @default auth.uid()
+     */
+    user_id: string;
     /** Format: json */
     content?: string;
     /** Format: character varying */
     type?: string;
+    /** Format: json */
+    tags?: string;
   };
 }
 
@@ -186,11 +194,13 @@ export interface parameters {
   /** Format: timestamp with time zone */
   "rowFilter.bullets.updated_at": string;
   /** Format: uuid */
-  "rowFilter.bullets.user": string;
+  "rowFilter.bullets.user_id": string;
   /** Format: json */
   "rowFilter.bullets.content": string;
   /** Format: character varying */
   "rowFilter.bullets.type": string;
+  /** Format: json */
+  "rowFilter.bullets.tags": string;
 }
 
 export interface operations {}

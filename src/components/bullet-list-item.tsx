@@ -3,7 +3,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
   Show,
 } from "solid-js";
 import { formatTime } from "../lib/utils/format-time";
@@ -15,6 +14,7 @@ import {
 } from "../store/bullet-collection";
 import { generateHtml, TextEditor } from "./text-editor";
 import { Editor } from "@tiptap/core";
+import { HashtagPluginKey } from "../lib/editor/extensions/hashtags";
 
 type Props = {
   id: string;
@@ -51,6 +51,7 @@ export const BulletListItem: Component<Props> = (props) => {
     } else {
       void updateBullet(props.id, {
         content: editor().getJSON(),
+        tags: HashtagPluginKey.getState(editor().state),
       });
     }
     stopEditing();

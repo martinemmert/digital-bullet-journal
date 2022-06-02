@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
-import { session, supabase } from "../lib/supabase-client";
+import { supabase } from "../lib/supabase-client";
 import { definitions } from "../../@types/supabase";
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { PostgrestError } from "@supabase/supabase-js";
 import { JSONContent } from "@tiptap/core";
 
@@ -41,7 +41,7 @@ function createLoadBulletCollectionQuery() {
 function createAddBulletMutation() {
   const [loading, setLoading] = createSignal(false);
 
-  function mutate(data: Pick<Bullet, "content" | "type">) {
+  function mutate(data: Pick<Bullet, "content" | "tags" | "type">) {
     setLoading(true);
     return fromBullets()
       .insert({ ...data })
@@ -54,7 +54,10 @@ function createAddBulletMutation() {
 function createUpdateBulletMutation() {
   const [loading, setLoading] = createSignal(false);
 
-  function mutate(id: string, data: Partial<Pick<Bullet, "content" | "type">>) {
+  function mutate(
+    id: string,
+    data: Partial<Pick<Bullet, "content" | "tags" | "type">>
+  ) {
     setLoading(true);
     return fromBullets()
       .update({ ...data })

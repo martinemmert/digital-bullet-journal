@@ -6,6 +6,7 @@ import {
 } from "../store/bullet-collection";
 import { BulletListItem } from "./bullet-list-item";
 import { Editor } from "@tiptap/core";
+import { HashtagPluginKey } from "../lib/editor/extensions/hashtags";
 
 export const BulletList: Component = () => {
   let form;
@@ -18,11 +19,11 @@ export const BulletList: Component = () => {
     event.preventDefault();
 
     const data: { type?: string } = Object.fromEntries(new FormData(form));
-
     const content = editor().getJSON();
+    const tags = HashtagPluginKey.getState(editor().state);
 
     if (!editor().isEmpty) {
-      addBullet({ content, type: data.type }).then(() => {
+      addBullet({ content, tags, type: data.type }).then(() => {
         editor().commands.focus();
         editor().commands.setContent("");
       });

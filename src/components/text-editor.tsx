@@ -1,6 +1,7 @@
 import { Component, createEffect, onCleanup, onMount, Setter } from "solid-js";
 import { Editor, Extension, generateHTML, JSONContent } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
+import { Hashtag } from "../lib/editor/extensions/hashtags";
 
 type Props = {
   editorRef?: Setter<Editor>;
@@ -16,7 +17,9 @@ export function generateHtml(json: JSONContent) {
   return generateHTML(json, [
     StarterKit.configure({
       horizontalRule: false,
+      heading: false,
     }),
+    Hashtag,
   ]);
 }
 
@@ -64,7 +67,9 @@ export const TextEditor: Component<Props> = (props) => {
         }),
         StarterKit.configure({
           horizontalRule: false,
+          heading: false,
         }),
+        Hashtag,
       ],
       content: props.initialContent,
       editable: !props.disabled,
