@@ -6,7 +6,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "serve": "vite preview",
-    "_generate-types": "npx openapi-typescript $VITE_SUPABASE_URL/rest/v1/?apikey=$VITE_SUPABASE_ANON_KEY --output @types/supabase.d.ts",
+    "_generate-types": "npx openapi-typescript $VITE_SUPABASE_URL/rest/v1/?apikey=$SUPABASE_ADMIN_KEY --output @types/supabase.d.ts",
     "generate-types": "npx dotenv-cli -e .env npm run _generate-types"
   },
   "license": "MIT",
