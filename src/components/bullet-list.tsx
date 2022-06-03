@@ -7,6 +7,7 @@ import {
 import { BulletListItem } from "./bullet-list-item";
 import { Editor } from "@tiptap/core";
 import { HashtagPluginKey } from "../lib/editor/extensions/hashtags";
+import { HashtagList } from "./hashtag-list";
 
 export const BulletList: Component = () => {
   let form;
@@ -89,11 +90,16 @@ export const BulletList: Component = () => {
         <div class="divider" />
       </Show>
 
-      <ol class="relative border-l border-base-300 ml-4">
-        <For each={bulletCollection}>
-          {(bullet) => <BulletListItem id={bullet.id} />}
-        </For>
-      </ol>
+      <div class="flex space-x-8">
+        <div class="w-full w-1/6">
+          <HashtagList></HashtagList>
+        </div>
+        <ol class="relative w-full border-l border-base-300 ml-4">
+          <For each={bulletCollection}>
+            {(bullet) => <BulletListItem id={bullet.id} />}
+          </For>
+        </ol>
+      </div>
     </article>
   );
 };
