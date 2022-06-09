@@ -1,13 +1,28 @@
 import { createStore } from "solid-js/store";
-import { supabase } from "../lib/supabase-client";
+import { session, supabase } from "../lib/supabase-client";
 import { definitions } from "../../@types/supabase";
-import { createSignal } from "solid-js";
-import { PostgrestError } from "@supabase/supabase-js";
+import { Accessor, createEffect, createSignal } from "solid-js";
+import { PostgrestError, RealtimeSubscription } from "@supabase/supabase-js";
 import { JSONContent } from "@tiptap/core";
 
 export type Bullet = Omit<definitions["bullets"], "content"> & {
   content: JSONContent;
 };
+
+interface UpdateMutator<
+  D = Partial<Pick<Bullet, "content" | "tags" | "type">>
+> {
+  (id: string, data: D): Promise<void>;
+}
+
+interface DeleteMutator {
+  (id: string): Promise<void>;
+}
+
+const updateMutations = new Map<string, [Accessor<boolean>, UpdateMutator]>();
+const deleteMutations = new Map<string, [Accessor<boolean>, DeleteMutator]>();
+
+let bulletSubscription: RealtimeSubscription;
 
 const [bulletCollection, setBulletCollection] = createStore<Bullet[]>([]);
 
@@ -51,67 +66,88 @@ function createAddBulletMutation() {
   return [loading, mutate] as [typeof loading, typeof mutate];
 }
 
-function createUpdateBulletMutation() {
+function createUpdateBulletMutation(cacheId?: string) {
+  if (cacheId && updateMutations.has(cacheId))
+    return updateMutations.get(cacheId);
+
   const [loading, setLoading] = createSignal(false);
 
-  function mutate(
+  async function mutate(
     id: string,
     data: Partial<Pick<Bullet, "content" | "tags" | "type">>
   ) {
     setLoading(true);
-    return fromBullets()
+    await fromBullets()
       .update({ ...data })
-      .match({ id })
-      .then(() => setLoading(false));
+      .match({ id });
+    setLoading(false);
   }
+
+  if (cacheId) updateMutations.set(cacheId, [loading, mutate]);
 
   return [loading, mutate] as [typeof loading, typeof mutate];
 }
 
-function createDeleteBulletMutation() {
+function createDeleteBulletMutation(cacheId?: string) {
+  if (cacheId && deleteMutations.has(cacheId))
+    return deleteMutations.get(cacheId);
+
   const [loading, setLoading] = createSignal(false);
 
-  function mutate(id: string) {
+  async function mutate(id: string) {
     setLoading(true);
-    return fromBullets()
-      .delete()
-      .match({ id })
-      .then(() => setLoading(false));
+    await fromBullets().delete().match({ id });
+    setLoading(false);
   }
+
+  if (cacheId) deleteMutations.set(cacheId, [loading, mutate]);
 
   return [loading, mutate] as [typeof loading, typeof mutate];
 }
 
-let subscription;
-
 // subscribe to events and update the store
-const subscribeToBulletUpdates = fromBullets().on(
-  "*",
-  ({ eventType, new: newItem, old: oldItem }) => {
-    if (eventType === "INSERT") {
-      setBulletCollection([newItem, ...bulletCollection]);
-    }
+const subscribeToBulletUpdates = async () => {
+  if (bulletSubscription) return bulletSubscription;
 
-    if (eventType === "UPDATE") {
-      const newCollection = [...bulletCollection];
-      const index = bulletCollection.findIndex(
-        (item) => item.id === newItem.id
-      );
+  const client = fromBullets().on(
+    "*",
+    ({ eventType, new: newItem, old: oldItem }) => {
+      if (eventType === "INSERT") {
+        setBulletCollection([newItem, ...bulletCollection]);
+      }
 
-      newCollection.splice(index, 1, newItem);
-      setBulletCollection(newCollection);
-    }
+      if (eventType === "UPDATE") {
+        const newCollection = [...bulletCollection];
+        const index = bulletCollection.findIndex(
+          (item) => item.id === newItem.id
+        );
 
-    if (eventType === "DELETE") {
-      const newCollection = [...bulletCollection];
-      const index = bulletCollection.findIndex(
-        (item) => item.id === oldItem.id
-      );
-      newCollection.splice(index, 1);
-      setBulletCollection(newCollection);
+        newCollection.splice(index, 1, newItem);
+        setBulletCollection(newCollection);
+      }
+
+      if (eventType === "DELETE") {
+        const newCollection = [...bulletCollection];
+        const index = bulletCollection.findIndex(
+          (item) => item.id === oldItem.id
+        );
+        deleteMutations.delete(oldItem.id);
+        newCollection.splice(index, 1);
+        setBulletCollection(newCollection);
+      }
     }
-  }
-);
+  );
+
+  bulletSubscription = client.subscribe();
+  console.log("subscribed to bullets");
+  return bulletSubscription;
+};
+
+const unsubscribeFromBulletUpdates = async () => {
+  if (!bulletSubscription) return;
+  await supabase.removeSubscription(bulletSubscription);
+  console.log("unsubscribed from bullets");
+};
 
 export {
   bulletCollection,
@@ -120,4 +156,5 @@ export {
   createUpdateBulletMutation,
   createDeleteBulletMutation,
   subscribeToBulletUpdates,
+  unsubscribeFromBulletUpdates,
 };

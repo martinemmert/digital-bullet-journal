@@ -1,27 +1,29 @@
-import { Component, createEffect, createReaction, onMount } from "solid-js";
-import { BulletList } from "../components/bullet-list";
+import { Component, createEffect, createReaction } from "solid-js";
 import { useNavigate } from "solid-app-router";
 import { logout, session, supabase } from "../lib/supabase-client";
 import {
   createLoadBulletCollectionQuery,
   subscribeToBulletUpdates,
+  unsubscribeFromBulletUpdates,
 } from "../store/bullet-collection";
+import { JournalEntryList } from "../lib/journal/journal-entry-list";
+import { NewJournalEntry } from "../lib/journal/new-journal-entry";
+import { HashtagList } from "../components/hashtag-list";
 
-export const BulletsPage: Component = () => {
+export const JournalPage: Component = () => {
   let subscription;
   const navigate = useNavigate();
   const [loading, error, loadBulletCollection] =
     createLoadBulletCollectionQuery();
 
-  createEffect(() => {
+  createEffect(async () => {
     if (session() && !subscription) {
-      console.info("subscribed to bullets");
-      subscription = subscribeToBulletUpdates.subscribe();
+      await subscribeToBulletUpdates();
       return;
     }
     if (!session() && subscription) {
-      void supabase.removeSubscription(subscription);
-      console.info("remove subscription to bullets");
+      await unsubscribeFromBulletUpdates();
+      return;
     }
   });
 
@@ -56,7 +58,16 @@ export const BulletsPage: Component = () => {
           </button>
         </div>
       </div>
-      <BulletList />
+      <div class="flex flex-row w-full max-w-4xl mx-auto py-4 space-x-8">
+        <div class="w-4/5">
+          <NewJournalEntry />
+          <div class="divider divider-vertical" />
+          <JournalEntryList />
+        </div>
+        <div class="w-1/5">
+          <HashtagList />
+        </div>
+      </div>
     </>
   );
 };
